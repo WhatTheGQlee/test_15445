@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "common/exception.h"
+#include "common/logger.h"
 #include "common/rwlatch.h"
 
 namespace bustub {
@@ -281,7 +282,10 @@ class Trie {
    */
   template <typename T>
   bool Insert(const std::string &key, T value) {
-    if (key.empty()) return false;
+    if (key.empty()) {
+      LOG_INFO("key is empty string");
+      return false;
+    }
     auto cur = this->root_.get();
     size_t n = key.size();
     size_t i = 0;
@@ -296,13 +300,16 @@ class Trie {
     char c = key[i];
     if (cur->HasChild(c)) {
       if (cur->GetChildNode(c)->get()->IsEndNode()) {
+        LOG_INFO("already a TrieNodeWithValue key = %s", key.c_str());
         latch_.WUnlock();
         return false;
       }
       auto newptr = std::make_unique<TrieNodeWithValue<T>>(std::move(*(cur->GetChildNode(c)->get())), value);
       cur->InsertChildNode(c, std::move(newptr));
+      LOG_INFO("convert it into TrieNodeWithValue key = %s", key.c_str());
     } else {
       cur->InsertChildNode(c, std::make_unique<TrieNodeWithValue<T>>(c, value));
+      LOG_INFO("create new TrieNodeWithValue key = %s", key.c_str());
     }
     latch_.WUnlock();
     return true;
@@ -326,7 +333,9 @@ class Trie {
    * @return True if the key exists and is removed, false otherwise
    */
   bool Remove(const std::string &key) {
-    if (key.empty()) return false;
+    if (key.empty()) {
+      return false;
+    }
     latch_.WLock();
     bool ok = Dfs(root_.get(), key, 0);
     latch_.WUnlock();
@@ -335,15 +344,18 @@ class Trie {
 
   bool Dfs(TrieNode *root, const std::string &key, uint64_t i) {
     if (i == key.size()) {
+      LOG_INFO("key = %s -- set is_end_ false", key.c_str());
       root->SetEndNode(false);
       return true;
     }
     if (!root->HasChild(key[i])) {
+      LOG_INFO("key = %s -- dont have child", key.c_str());
       return false;
     }
     auto next = root->GetChildNode(key[i])->get();
     auto ok = Dfs(next, key, i + 1);
     if (!next->IsEndNode() && !next->HasChildren()) {
+      LOG_INFO("key = %s -- dont have children remove it , char : %c", key.c_str(), key[i + 1]);
       root->RemoveChildNode(key[i]);
     }
     return ok;
@@ -378,6 +390,7 @@ class Trie {
     auto cur = this->root_.get();
     for (char c : key) {
       if (!cur->HasChild(c)) {
+        LOG_INFO("key = %s -- key does not exist in trie , char : %c", key.c_str(), c);
         latch_.RUnlock();
         return {};
       }
@@ -385,9 +398,11 @@ class Trie {
     }
     auto node = dynamic_cast<TrieNodeWithValue<T> *>(cur);
     if (!node) {
+      LOG_INFO("key = %s -- given type T is not the same as the value type stored in TrieNodeWithValue", key.c_str());
       latch_.RUnlock();
       return {};
     }
+    LOG_INFO("key = %s -- get value", key.c_str());
     *success = true;
     auto v = node->GetValue();
     latch_.RUnlock();

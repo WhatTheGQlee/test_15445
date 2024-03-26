@@ -11,6 +11,7 @@
 #pragma once
 
 #include <queue>
+#include <vector>
 
 #include "storage/page/b_plus_tree_page.h"
 
@@ -41,6 +42,15 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   auto KeyAt(int index) const -> KeyType;
   void SetKeyAt(int index, const KeyType &key);
   auto ValueAt(int index) const -> ValueType;
+  void SetValueAt(int index, const ValueType &value);
+
+  auto LowerBound(const KeyType &key, const KeyComparator &comparator) const -> int;
+  auto LowerBound(const std::vector<MappingType> &vec, const KeyType &key, const KeyComparator &comparator) const
+      -> int;
+  auto Insert(const KeyType &key, const ValueType &value, const KeyComparator &comparator) -> bool;
+
+  void Split(B_PLUS_TREE_INTERNAL_PAGE_TYPE *new_page, const KeyType &key, const ValueType &value,
+             const KeyComparator &comparator);
 
  private:
   // Flexible array member for page data.

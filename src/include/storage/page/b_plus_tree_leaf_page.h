@@ -52,10 +52,15 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   auto ValueAt(int index) const -> ValueType;
   auto KeyValueAt(int index) const -> MappingType;
 
+  void ShiftLeft(int index);
+  void ShiftRight();
+
   auto LowerBound(const KeyType &key, const KeyComparator &comparator) const -> int;
   auto Insert(const KeyType &key, const ValueType &value, const KeyComparator &comparator) -> bool;
 
   void Split(BPlusTreeLeafPage *new_page);
+
+  auto Remove(const KeyType &key, const KeyComparator &comparator) -> bool;
 
  private:
   page_id_t next_page_id_;

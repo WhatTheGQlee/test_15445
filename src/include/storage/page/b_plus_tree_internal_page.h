@@ -43,6 +43,10 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   void SetKeyAt(int index, const KeyType &key);
   auto ValueAt(int index) const -> ValueType;
   void SetValueAt(int index, const ValueType &value);
+  auto FindIndex(const ValueType &value) const -> int;
+
+  void ShiftLeft(int index = 0);
+  void ShiftRight();
 
   auto LowerBound(const KeyType &key, const KeyComparator &comparator) const -> int;
   auto LowerBound(const std::vector<MappingType> &vec, const KeyType &key, const KeyComparator &comparator) const

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "common/exception.h"
+#include "common/logger.h"
 #include "storage/page/b_plus_tree_internal_page.h"
 #include "storage/page/b_plus_tree_page.h"
 
@@ -134,8 +135,15 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Split(B_PLUS_TREE_INTERNAL_PAGE_TYPE *new_p
   vec.reserve(GetMaxSize() + 1);
   int index = LowerBound(vec, key, comparator);
   vec.insert(vec.begin() + index, {key, value});
+  // for (MappingType num : vec) {
+  //   LOG_DEBUG("%ld ", num.first.ToString());
+  // }
   int x = GetMinSize();
   SetSize(x);
+  // for (int i = 0;i < x;i++) {
+  //   LOG_DEBUG("%ld %d", array_[x].first.ToString(), x);
+  // }
+  std::copy(vec.data(), vec.data() + x, array_);
   std::copy(vec.data() + x, vec.data() + vec.size(), new_page->array_);
   new_page->SetSize(vec.size() - x);
 }

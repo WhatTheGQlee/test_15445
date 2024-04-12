@@ -11,10 +11,12 @@
 #pragma once
 
 #include <queue>
+#include <shared_mutex>
 #include <string>
 #include <vector>
 
 #include "common/config.h"
+#include "common/logger.h"
 #include "concurrency/transaction.h"
 #include "storage/index/index_iterator.h"
 #include "storage/page/b_plus_tree_internal_page.h"
@@ -41,12 +43,18 @@ class BPlusTree {
   using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;
   using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
 
+  enum class OpeType { FIND, INSERT, REMOVE };
+
  public:
   explicit BPlusTree(std::string name, BufferPoolManager *buffer_pool_manager, const KeyComparator &comparator,
                      int leaf_max_size = LEAF_PAGE_SIZE, int internal_max_size = INTERNAL_PAGE_SIZE);
 
   // Returns true if this B+ tree has no keys and values.
   auto IsEmpty() const -> bool;
+
+  // Latch for B+ tree
+  auto IsSafe(BPlusTreePage *page, OpeType op) -> bool;
+  void UnlockPageSet(Transaction *transaction, bool is_dirty);
 
   // Insert a key-value pair into this B+ tree.
   auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
@@ -57,15 +65,15 @@ class BPlusTree {
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
   void HandleUnderFlow(BPlusTreePage *page, Transaction *transaction = nullptr);
   void GetSiblings(BPlusTreePage *page, page_id_t *left_page_id, page_id_t *right_page_id);
-  auto TryBorrow(BPlusTreePage *page, BPlusTreePage *sibling_page, InternalPage *parent_page, bool is_left) -> bool;
+  auto TryBorrow(BPlusTreePage *page, Page *siblingpage, InternalPage *parent_page, bool is_left) -> bool;
 
   void Merge(BPlusTreePage *left_page, BPlusTreePage *right_page, InternalPage *parent_page);
 
-  void UnpinSiblingPage(page_id_t left_page_id, page_id_t right_page_id);
+  void UnpinSiblingPage(Page *left_page_id, Page *right_page_id);
 
   // return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr) -> bool;
-  auto GetLeafPage(const KeyType &key) -> Page *;
+  auto GetLeafPage(const KeyType &key, Transaction *transaction, OpeType op) -> Page *;
 
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
@@ -115,7 +123,27 @@ class BPlusTree {
   int internal_max_size_;
 
   ///
-  mutable std::mutex latch_;
+
+  ReaderWriterLatch root_latch_;
+  // mutable std::mutex latch_;
+  class RootMutex {
+   public:
+    inline void WLatch() {
+      latch_.lock();
+      // LOG_INFO("ROOT_LATCH_LOCK");
+    }
+    inline void WUnLatch() {
+      latch_.unlock();
+      // LOG_INFO("ROOT_LATCH_UNLOCK");
+    }
+    inline void RLatch() { latch_.lock_shared(); }
+    inline void RUnLatch() { latch_.unlock_shared(); }
+
+   private:
+    std::shared_mutex latch_;
+  };
+
+  // RootMutex root_latch_;  // mutex for root_page_id_
 };
 
 }  // namespace bustub

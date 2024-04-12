@@ -117,7 +117,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::Remove(const KeyType &key, const KeyComparator 
     ShiftLeft(index);
     return true;
   }
-  LOG_INFO("KEY %ld NOT FOUND", key.ToString());
+  //  LOG_INFO("KEY %ld NOT FOUND", key.ToString());
   return false;
 }
 

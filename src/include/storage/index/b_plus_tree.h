@@ -55,6 +55,7 @@ class BPlusTree {
   // Latch for B+ tree
   auto IsSafe(BPlusTreePage *page, OpeType op) -> bool;
   void UnlockPageSet(Transaction *transaction, bool is_dirty);
+  auto GetPageFromTransaction(page_id_t page_id, Transaction *transaction) -> Page *;
 
   // Insert a key-value pair into this B+ tree.
   auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
@@ -64,7 +65,7 @@ class BPlusTree {
   // Remove a key and its value from this B+ tree.
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
   void HandleUnderFlow(BPlusTreePage *page, Transaction *transaction = nullptr);
-  void GetSiblings(BPlusTreePage *page, page_id_t *left_page_id, page_id_t *right_page_id);
+  void GetSiblings(BPlusTreePage *page, page_id_t *left_page_id, page_id_t *right_page_id, Page *parent_page);
   auto TryBorrow(BPlusTreePage *page, Page *siblingpage, InternalPage *parent_page, bool is_left) -> bool;
 
   void Merge(BPlusTreePage *left_page, BPlusTreePage *right_page, InternalPage *parent_page);

@@ -13,6 +13,7 @@
 #include "buffer/buffer_pool_manager_instance.h"
 
 #include "common/exception.h"
+#include "common/logger.h"
 #include "common/macros.h"
 
 namespace bustub {
@@ -242,6 +243,22 @@ auto BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) -> bool {
 }
 
 auto BufferPoolManagerInstance::AllocatePage() -> page_id_t { return next_page_id_++; }
+
+// void BufferPoolManagerInstance::CheckPinCount() {
+//   std::lock_guard lock(latch_);
+//   bool clear = true;
+//   for (size_t id = 0; id < pool_size_; ++id) {
+//     Page *page = pages_ + id;
+//     auto page_id = page->page_id_;
+//     if (page_id != INVALID_PAGE_ID && page_id != 0 && page->pin_count_ > 0) {
+//       LOG_WARN("\033[1;31m page %d pin_count %d != 0\033[0m", page->page_id_, page->pin_count_);
+//       clear = false;
+//     }
+//   }
+//   if (clear) {
+//     LOG_WARN("\033[1;31m all clear \033[0m");
+//   }
+// }
 
 void BufferPoolManagerInstance::ResetPage(Page *page) {
   page->ResetMemory();

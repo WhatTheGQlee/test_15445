@@ -74,7 +74,7 @@ class BPlusTree {
 
   // return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr) -> bool;
-  auto GetLeafPage(const KeyType &key, Transaction *transaction, OpeType op) -> Page *;
+  auto GetLeafPage(const KeyType &key, Transaction *transaction, OpeType op, bool is_first = true) -> Page *;
 
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
@@ -127,22 +127,22 @@ class BPlusTree {
 
   ReaderWriterLatch root_latch_;
   // mutable std::mutex latch_;
-  class RootMutex {
-   public:
-    inline void WLatch() {
-      latch_.lock();
-      // LOG_INFO("ROOT_LATCH_LOCK");
-    }
-    inline void WUnLatch() {
-      latch_.unlock();
-      // LOG_INFO("ROOT_LATCH_UNLOCK");
-    }
-    inline void RLatch() { latch_.lock_shared(); }
-    inline void RUnLatch() { latch_.unlock_shared(); }
+  // class RootMutex {
+  //  public:
+  //   inline void WLatch() {
+  //     latch_.lock();
+  //     // LOG_INFO("ROOT_LATCH_LOCK");
+  //   }
+  //   inline void WUnLatch() {
+  //     latch_.unlock();
+  //     // LOG_INFO("ROOT_LATCH_UNLOCK");
+  //   }
+  //   inline void RLatch() { latch_.lock_shared(); }
+  //   inline void RUnLatch() { latch_.unlock_shared(); }
 
-   private:
-    std::shared_mutex latch_;
-  };
+  //  private:
+  //   std::shared_mutex latch_;
+  // };
 
   // RootMutex root_latch_;  // mutex for root_page_id_
 };
